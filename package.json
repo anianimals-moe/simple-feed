@@ -1,0 +1,26 @@
+{
+  "name": "simple-feed",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "register": "ts-node src/register.ts"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.15.16",
+    "@atproto/xrpc-server": "^0.8.0",
+    "better-sqlite3": "^12.0.0",
+    "dotenv": "^16.5.0",
+    "partysocket": "^1.1.4",
+    "really-relaxed-json": "^0.3.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.0.3",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.3"
+  }
+}
