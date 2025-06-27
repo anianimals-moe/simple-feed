@@ -20,6 +20,8 @@ This atproto feed server has two parts
     - /xrpc/app.bsky.feed.getFeedSkeleton?feed={full_feed_id}  :  accessed by App layer to get feed posts
     - /.well-known/did.json   : comply with Well Known DID Configuration 
     - /{SECRET_PATH}/{feed_id}?d={post_url} : publicly accessible but secret route for you to delete posts from a feed manually
+  - And one POST route
+    - /{SECRET_PATH}/update_feeds : publicly accessible but secret route for cloud servers to update feeds.json without needing to tunnel in
 
 
 - @atproto/api: Official api, for basic queries (did, lists, feed registration) 
