@@ -1,4 +1,5 @@
 import {publicAgent} from "./publicAgent.ts";
+import fs from "fs";
 
 const FEED_LIST_PATHS = [
     "allowList",
@@ -9,14 +10,24 @@ const FEED_LIST_PATHS = [
 
 export async function updateLists(feeds, db) {
     const listsMap = new Map<string, string[]>();
-    const toDelete:any = [];
+    let oldFeeds = [];
+    try {
+        const fileData = fs.readFileSync("feeds-old.json", {encoding:"utf8"});
+        if (fileData) {
+            oldFeeds = JSON.parse(fileData);
+        } else {
+            oldFeeds = [];
+        }
+    } catch (e) {
+        console.error("Handle feeds-old.json", e);
+        oldFeeds = [];
+    }
+
 
     for (const feed of feeds) {
-        const {shortName} = feed;
         for (const path of FEED_LIST_PATHS) {
             const list = feed[`${path}Sync`];
             if (!list) { continue; }
-            const old = feed[path] || [];
             let justUpdated = listsMap.get(list);
             if (!justUpdated) {
                 let cursor:any = {};
@@ -52,12 +63,22 @@ export async function updateLists(feeds, db) {
             }
 
             feed[path] = justUpdated;
-            if (path === "blockList") {
-                justUpdated.filter(x => !old.find(y => x === y))
-                    .forEach(author => toDelete.push({author, rkey:shortName}));
-            }
         }
     }
+
+    const toDelete = feeds.reduce((acc, feed) => {
+        const {shortName} = feed;
+        const oldFeed = oldFeeds.find(old => old.shortName === shortName);
+        if (oldFeed) {
+            const oldList = oldFeed.blockList || [];
+            feed.blockList.filter(x => !oldList.find(y => y === x))
+                .forEach(author => acc.push({author, rkey:shortName}));
+        }
+        return acc;
+    }, []);
+
+    // For comparison with next loop
+    fs.writeFileSync("feeds-old.json", JSON.stringify(feeds, null, 2), {encoding:"utf8"});
 
     if (toDelete.length > 0) {
         const deleteBlocked = db.prepare('DELETE FROM posts WHERE author=@author AND rkey=@rkey)');

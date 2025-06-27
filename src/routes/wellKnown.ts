@@ -1,6 +1,5 @@
 export default function wellKnown(res) {
-    res.writeHead(401, { 'Content-Type': "application/json" });
-    res.end(JSON.stringify({
+    res.json({
         "@context": ["https://www.w3.org/ns/did/v1"],
         "id": `did:web:${process.env.DOMAIN}`,
         "service": [
@@ -10,5 +9,5 @@ export default function wellKnown(res) {
                 "serviceEndpoint": `https://${process.env.DOMAIN}`
             }
         ]
-    }));
+    });
 }

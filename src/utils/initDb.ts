@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import {GRAVITY} from "./constants.ts";//TEST
+import {GRAVITY} from "./constants.ts";
 
 let NOW = 0;
 export function updateNow () {

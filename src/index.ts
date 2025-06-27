@@ -1,18 +1,20 @@
 import dotenv from 'dotenv';
 import * as http from "http";
-import describeFeedGenerator from "./routes/describeFeedGenerator.ts";//TEST
-import getFeedSkeleton from "./routes/getFeedSkeleton.ts";//TEST
-import deletePostFromFeed from "./routes/deletePostFromFeed.ts";//TEST
-import {getStoredData} from "./utils/getStoredData.ts";//TEST
-import {Jetstream} from "./utils/Jetstream.ts";//TEST
-import {initDb} from "./utils/initDb.ts";//TEST
-import {updateLists} from "./utils/updateLists.ts";//TEST
-import {prunePosts} from "./utils/prunePosts.ts";//TEST
-import {pruneModeration} from "./utils/pruneModeration.ts";//TEST
-import {initConstants, KEEP_POSTS_FOR, SUPPORTED_CW_LABELS, PORT} from "./utils/constants.ts";//TEST
-import {LabelSubscription} from "./utils/LabelSubscription.ts";//TEST
-import {pruneOrphans} from "./utils/pruneOrphans.ts";//TEST
-import wellKnown from "./routes/wellKnown.ts";//TEST
+import describeFeedGenerator from "./routes/describeFeedGenerator.ts";
+import getFeedSkeleton from "./routes/getFeedSkeleton.ts";
+import deletePostFromFeed from "./routes/deletePostFromFeed.ts";
+import {getStoredData} from "./utils/getStoredData.ts";
+import {Jetstream} from "./utils/Jetstream.ts";
+import {initDb} from "./utils/initDb.ts";
+import {updateLists} from "./utils/updateLists.ts";
+import {prunePosts} from "./utils/prunePosts.ts";
+import {pruneModeration} from "./utils/pruneModeration.ts";
+import {initConstants, KEEP_POSTS_FOR, SUPPORTED_CW_LABELS, PORT} from "./utils/constants.ts";
+import {LabelSubscription} from "./utils/LabelSubscription.ts";
+import {pruneOrphans} from "./utils/pruneOrphans.ts";
+import wellKnown from "./routes/wellKnown.ts";
+import updateFeeds from "./routes/updateFeeds.ts";
+import express from 'express'
 
 console.log("start");
 dotenv.config();
@@ -79,28 +81,24 @@ if (KEEP_POSTS_FOR > 0) {
 })();
 
 
-const server = http.createServer(async (req, res) => {
-    if (req.method === 'GET') {
-        if (req.url!.startsWith('/xrpc/app.bsky.feed.getFeedSkeleton')) {
-            getFeedSkeleton(req, res, db, feeds);
-        } else if (req.url === '/xrpc/app.bsky.feed.describeFeedGenerator') {
-            describeFeedGenerator(res, feeds);
-        } else if (req.url!.startsWith(`/${process.env.SECRET_PATH}/`)) {
-            if (!await deletePostFromFeed(req, res, db, feeds)) {
-                res.writeHead(404, { 'Content-Type': 'text/plain' });
-                res.end('Not Found');
-            }
-        } else if (req.url === "/.well-known/did.json") {
-            wellKnown(res);
-        }else {
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
-            res.end('Not Found');
-        }
-    } else {
-        res.writeHead(405, { 'Content-Type': 'text/plain' });
-        res.end('Method Not Allowed');
-    }
+const app = express();
+app.use(express.json());
+app.get('/xrpc/app.bsky.feed.getFeedSkeleton', (req, res) => {
+    getFeedSkeleton(req, res, db, feeds);
 });
-server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
+app.get('/xrpc/app.bsky.feed.describeFeedGenerator', (req, res) => {
+    describeFeedGenerator(res, feeds);
 });
+app.get('/.well-known/did.json', (req, res) => {
+    wellKnown(res);
+});
+
+app.get(`/${process.env.SECRET_PATH}/:rkey`, async (req, res) => {
+   await deletePostFromFeed(req, res, db, feeds);
+});
+
+app.post(`/${process.env.SECRET_PATH}/update_feeds`, (req, res) => {
+    updateFeeds(req, res);
+});
+
+app.listen(3000);

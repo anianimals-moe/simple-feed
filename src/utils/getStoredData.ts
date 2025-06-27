@@ -1,7 +1,7 @@
 import fs from "fs";
 import {AtpAgent} from "@atproto/api";
-import {prepKeywords} from "./textAndKeywords.ts";//TEST
-import {SUPPORTED_CW_LABELS} from "./constants.ts";//TEST
+import {prepKeywords} from "./textAndKeywords.ts";
+import {SUPPORTED_CW_LABELS} from "./constants.ts";
 
 export async function getStoredData() {
     if (!process.env.DOMAIN) {

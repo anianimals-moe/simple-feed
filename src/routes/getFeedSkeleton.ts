@@ -1,30 +1,21 @@
 import url from "url";
-import {updateNow} from "../utils/initDb.ts";//TEST
+import {updateNow} from "../utils/initDb.ts";
 
 export default function getFeedSkeleton(req, res, db, feeds) {
-    const {feed:feedId, cursor:queryCursor, limit:_limit=50} = url.parse(req.url,true).query;
+    const {feed:feedId, cursor:queryCursor, limit:_limit=50} = req.query;
     const feedObj = feeds.find(x => x.uri === feedId);
-    if (!feedObj) {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not Found');
-        return;
-    }
+    if (!feedObj) { res.status(404).end('Not Found'); return; }
 
     let limit = parseInt(_limit as string);
-    if (isNaN(limit) || limit > 100) {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not Found');
-        return;
-    }
+    if (isNaN(limit) || limit > 100) { res.status(404).end('Not Found'); return; }
 
     const user = getUser(req);
     if (feedObj.viewers.length > 0 && !feedObj.viewers.find(x => x === user)) {
-        res.writeHead(401, { 'Content-Type': "application/json" });
-        res.end(JSON.stringify({
+        res.status(401).json({
             feed:[], cursor:"",
             error: "Private Feed",
             message:"The feed owner has restricted access to this feed, contact them to view it"
-        }));
+        });
         return;
     }
 
@@ -65,9 +56,7 @@ export default function getFeedSkeleton(req, res, db, feeds) {
         cursor = cursorV;
     }
 
-
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({feed, cursor}));
+    res.json({feed, cursor});
 }
 
 function atob(base64) {
@@ -89,11 +78,10 @@ function parseJwt (token)  {
 }
 
 function getUser (req) {
-    let {authorization} = req.headers;
+    const authorization = req.header("authorization");
     let user;
     if (authorization && authorization.startsWith("Bearer ")) {
-        authorization = authorization.slice(7);
-        const {iss} = parseJwt(authorization);
+        const {iss} = parseJwt(authorization.slice(7));
         if (iss) {
             user = iss;
         }

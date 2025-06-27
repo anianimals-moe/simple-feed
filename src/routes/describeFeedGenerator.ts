@@ -1,7 +1,6 @@
 export default function describeFeedGenerator(res, feeds) {
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({
+    res.json({
         did: `did:web:${process.env.DOMAIN}`,
         feeds: feeds.map(x => x.uri)
-    }));
+    });
 }

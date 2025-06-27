@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import {getStoredData} from "utils/getStoredData.ts";//TEST
+import {getStoredData} from "utils/getStoredData.ts";
 import fs from "fs";
 import { resolve } from 'path'
 

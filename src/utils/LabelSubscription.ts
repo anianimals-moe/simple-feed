@@ -1,6 +1,6 @@
 import {Subscription} from "@atproto/xrpc-server";
 import Database from "better-sqlite3";
-import {SUPPORTED_CW_LABELS} from "./constants.ts";//TEST
+import {SUPPORTED_CW_LABELS} from "./constants.ts";
 export class LabelSubscription {
     public sub: Subscription
     db: Database

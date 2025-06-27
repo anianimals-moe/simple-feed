@@ -136,3 +136,4 @@ database.db*
 .idea/
 
 feeds.json
+feeds-old.json

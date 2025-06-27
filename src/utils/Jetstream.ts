@@ -1,7 +1,7 @@
 import {WebSocket} from "partysocket";
 import Database from "better-sqlite3";
-import {SUPPORTED_CW_LABELS, TIMEZONE} from "./constants.ts";//TEST
-import {findKeyword, findKeywordIn} from "./textAndKeywords.ts";//TEST
+import {SUPPORTED_CW_LABELS, TIMEZONE} from "./constants.ts";
+import {findKeyword, findKeywordIn} from "./textAndKeywords.ts";
 
 const JETSTREAM_SERVERS = [
     "jetstream1.us-east.bsky.network",
@@ -18,7 +18,7 @@ export class Jetstream {
     divergence:number;
     feedsWithLike:string[];
     feedsWithRepost:string[];
-    tickMesssage:string;
+    tickMessage:string;
 
     constructor(options, db, feeds) {
         this.db = db;
@@ -34,7 +34,7 @@ export class Jetstream {
         });
 
         this.divergence = NaN;
-        this.url = new URL(options.endpoint ?? `wss://${JETSTREAM_SERVERS[1]}/subscribe`); // TODO use other servers
+        this.url = new URL(options.endpoint ?? `wss://${JETSTREAM_SERVERS[0]}/subscribe`); // TODO use other servers
         options.wantedCollections?.forEach((collection) => {
             this.url.searchParams.append("wantedCollections", collection);
         });
@@ -46,9 +46,9 @@ export class Jetstream {
         }
 
         setInterval(() => {
-            if (this.tickMesssage) {
-                console.log(this.tickMesssage);
-                this.tickMesssage = "";
+            if (this.tickMessage) {
+                console.log(this.tickMessage);
+                this.tickMessage = "";
             }
         }, 5*1000);
     }
@@ -134,8 +134,9 @@ export class Jetstream {
 
                             const thenTs = new Date(record.createdAt).getTime();
                             const diffTs = nowTs - thenTs;
-                            if(diffTs > 43200000 // 12 hours past
-                                || diffTs < -600000 // 10 min future
+                            if(//diffTs > 43200000 // 12 hours past
+                               // ||
+                                diffTs < -600000 // 10 min future
                             ) { return; }
                             timestamps.push(thenTs);
 
@@ -512,7 +513,7 @@ export class Jetstream {
                         const mm = String(Math.floor(seconds / 60)).padStart(2,"0");
                         const ss = String(Math.floor(seconds % 60)).padStart(2,"0");
 
-                        this.tickMesssage = `[${cursor}] ${commands.length} ${new Date(median).toLocaleString("en-GB", TIMEZONE)} now:${date.toLocaleString("en-GB", TIMEZONE)} [${hh}:${mm}:${ss}.${ms}] ${diffPrev>0?"+":""}${diffPrev}`;
+                        this.tickMessage = `[${cursor}] ${commands.length} ${new Date(median).toLocaleString("en-GB", TIMEZONE)} now:${date.toLocaleString("en-GB", TIMEZONE)} [${hh}:${mm}:${ss}.${ms}] ${diffPrev>0?"+":""}${diffPrev}`;
                     }
                 } else if (event.commit.collection === "app.bsky.feed.like"){
                     switch (event.commit.operation) {
