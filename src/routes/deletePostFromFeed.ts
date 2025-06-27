@@ -12,7 +12,7 @@ export default async function deletePostFromFeed(req, res, db, feeds) {
     if (parts.length !== 7) { res.status(404).end(); return; }
 
     let actor = parts[4];
-    if (actor.startsWith("did:plc:")) {
+    if (!actor.startsWith("did:plc:")) {
         const {success, data} = await publicAgent.app.bsky.actor.getProfile({actor});
         if (!success || !data?.did) { return false; }
         actor = data.did;
