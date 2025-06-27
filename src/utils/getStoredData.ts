@@ -36,7 +36,7 @@ export async function getStoredData() {
     await agent.login({identifier, password});
 
     feeds = feeds.map(feed => {
-        let {keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky,
+        let {keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky, displayName, description,
             blockList, blockListSync,
             allowList, allowListSync,
             everyList, everyListSync,
@@ -58,7 +58,7 @@ export async function getStoredData() {
         viewers = viewers || [];
 
         return { uri,
-            keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky,
+            keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky, displayName, description,
             blockList, blockListSync,
             allowList, allowListSync,
             everyList, everyListSync,

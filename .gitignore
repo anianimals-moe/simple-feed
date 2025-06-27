@@ -137,3 +137,6 @@ database.db*
 
 feeds.json
 feeds-old.json
+
+*.png
+*.jpg

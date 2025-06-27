@@ -22,10 +22,8 @@ import { resolve } from 'path'
             imageData = fs.readFileSync(imagePath, {encoding: 'base64'});
 
             if (imageData.startsWith("iVBORw0K")) {
-                console.log("png");
                 encoding = "image/png";
             } else if (imageData.startsWith("/9j/")) {
-                console.log("jpg");
                 encoding = "image/jpeg";
             } else {
                 throw `${imagePath} is not a valid jpg, jpeg, or png. Use photo editing software to save correctly`;
@@ -51,7 +49,7 @@ import { resolve } from 'path'
                 createdAt: new Date().toISOString(),
             },
         };
-
+        console.log(JSON.stringify(record, null, 2));
         await agent.com.atproto.repo.putRecord(record);
     }
     console.log("REGISTERED");
