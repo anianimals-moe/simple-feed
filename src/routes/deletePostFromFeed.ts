@@ -14,7 +14,7 @@ export default async function deletePostFromFeed(req, res, db, feeds) {
     let actor = parts[4];
     if (!actor.startsWith("did:plc:")) {
         const {success, data} = await publicAgent.app.bsky.actor.getProfile({actor});
-        if (!success || !data?.did) { return false; }
+        if (!success || !data?.did) {  res.status(404).end(); return; }
         actor = data.did;
     }
 
