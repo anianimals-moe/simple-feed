@@ -2,7 +2,7 @@ module.exports = {
     apps: [
         {
             name: 'simple-feed',
-            script: 'tsx src/index.ts',
+            script: 'yarn dev',
             args: '',
             watch: false,
             min_uptime: 120000,
