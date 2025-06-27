@@ -1,5 +1,5 @@
-import url from "url";
 import {updateNow} from "../utils/initDb.ts";
+import {randomInt} from "crypto";
 
 export default function getFeedSkeleton(req, res, db, feeds) {
     const {feed:feedId, cursor:queryCursor, limit:_limit=50} = req.query;
@@ -37,7 +37,9 @@ export default function getFeedSkeleton(req, res, db, feeds) {
             if (start === 0 && sticky) {feed = [{post:sticky}];}
             cursor = "";
         } else {
-            if (start === 0 && sticky) {feed.splice(1, 0, {post: sticky})}
+            if (start === 0 && sticky) {
+                feed.splice(1, 0, {post: sticky})
+            }
             cursor = Math.min(start + limit, start + feed.length).toString();
             feed = feed.map(x => {return {post:x._id}});
         }
@@ -192,7 +194,12 @@ function liveFeedHandler(db, feedObj, queryCursor, limit) {
                 }
                 return {cursor, feed};
             }
+
             if (skip === 0) {
+                if (sticky) {
+                    result = result.filter(x => x._id !== sticky);
+                    result.splice(randomInt(0, 2),0, {_id: sticky});
+                }
                 cursor = `${limit}`;
             } else {
                 cursor = `${result.length + skip}`;
