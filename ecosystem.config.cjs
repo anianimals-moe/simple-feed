@@ -2,7 +2,7 @@ module.exports = {
     apps: [
         {
             name: 'simple-feed',
-            script: 'ts-node src/index.ts',
+            script: 'tsx src/index.ts',
             args: '',
             watch: false,
             min_uptime: 120000,
