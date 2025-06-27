@@ -14,7 +14,7 @@ Getting Started
 - (Optional) Install pm2 and use it to automatically restart the server when errors occur, and to receive commands from /update_feeds that forces a restart
   - Note that some errors can cause infinite loops and this does not solve those
   - Especially useful for updating feeds.json in a Dockerized app from a local version of this app without making a new docker or ssh into existing
-  - Start using <pm2 start ecosystem.config.js> instead of <yarn dev> to have pm2 handle restarting, pm2 config in ecosystem.config.js
+  - Start using <pm2 start ecosystem.config.cjs> instead of <yarn dev> to have pm2 handle restarting
 
 
 Some other readmes
