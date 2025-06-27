@@ -14,6 +14,7 @@ import {pruneOrphans} from "./utils/pruneOrphans.ts";
 import wellKnown from "./routes/wellKnown.ts";
 import updateFeeds from "./routes/updateFeeds.ts";
 import express from 'express'
+import getDidForUser from "./routes/getDidForUser.ts";
 
 (async () => {
     console.log("start");
@@ -97,7 +98,12 @@ import express from 'express'
         await deletePostFromFeed(req, res, db, feeds);
     });
 
-    app.post(`/${process.env.SECRET_PATH}/update_feeds`, (req, res) => {
+    app.get(`/${process.env.SECRET_PATH}/f/user`, async (req, res) => {
+        console.log("user", req.url);
+        await getDidForUser(req, res);
+    })
+
+    app.post(`/${process.env.SECRET_PATH}/f/update_feeds`, (req, res) => {
         updateFeeds(req, res);
     });
 
