@@ -1,7 +1,7 @@
 Work in progress
 
 Getting Started
-- Have npm, yarn, and tsx installed (not covered by this readme, sorry), yes I know tsx has issues
+- Have npm, yarn, and tsx installed globally (not covered by this readme, sorry), yes I know tsx has issues
 - Prepare feeds.json, which is a combination of output from blueskyfeeds.com backup json with all feeds combined in an array []
   - e.g. if only 1 feed, put a [ at the front and ] and the end and rename the json file to feed.json
 - [Prepare the environment file](docs/env.md)
