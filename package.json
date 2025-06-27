@@ -16,12 +16,12 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "partysocket": "^1.1.4",
+    "ts-node": "^10.9.2",
     "really-relaxed-json": "^0.3.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.0.3",
-    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
