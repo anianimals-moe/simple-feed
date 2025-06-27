@@ -78,12 +78,11 @@ export async function updateLists(feeds, db) {
     }, []);
 
     // For comparison with next loop
-    fs.writeFileSync("feeds-old.json", JSON.stringify(feeds, null, 2), {encoding:"utf8"});
+    fs.writeFileSync("feeds-old.json", JSON.stringify(feeds.map(x => {return {shortName: x.shortName, blockList:x.blockList}}), null, 2), {encoding:"utf8"});
 
     if (toDelete.length > 0) {
-        const deleteBlocked = db.prepare('DELETE FROM posts WHERE author=@author AND rkey=@rkey)');
+        const deleteBlocked = db.prepare('DELETE FROM posts WHERE author=@author AND rkey=@rkey');
         const deleteMany = db.transaction((items) => items.forEach(item => deleteBlocked.run(item)));
-
 
         // Delete all posts in feed from newly blocked users
         deleteMany(toDelete);
