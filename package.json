@@ -5,9 +5,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "update_feeds": "ts-node src/update_feeds.ts",
-    "register": "ts-node src/register.ts"
+    "dev": "tsx src/index.ts",
+    "update_feeds": "tsx src/update_feeds.ts",
+    "register": "tsx src/register.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.15.16",
@@ -21,8 +21,8 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.0.3",
-    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }
 }
