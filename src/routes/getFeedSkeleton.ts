@@ -1,5 +1,6 @@
 import {updateNow} from "../utils/initDb.ts";
 import {randomInt} from "crypto";
+import {SUPPORTED_CW_LABELS} from "../utils/constants.ts";
 
 export default function getFeedSkeleton(req, res, db, feeds) {
     const {feed:feedId, cursor:queryCursor, limit:_limit=50} = req.query;
@@ -156,7 +157,13 @@ function liveFeedHandler(db, feedObj, queryCursor, limit) {
                     limit = limit - 1;
                 }
 
-                result = db.prepare("SELECT _id, indexed_at FROM posts WHERE rkey=? ORDER BY indexed_at DESC LIMIT ?").all(feedObj.shortName, limit);
+                // If moderation is enabled, add a 1-minute buffer to wait for moderation to happen
+                if (feedObj.allowLabels.length < SUPPORTED_CW_LABELS.length) {
+                    result = db.prepare("SELECT _id, indexed_at FROM posts WHERE rkey=? AND indexed_at < ? ORDER BY indexed_at DESC LIMIT ?").all(feedObj.shortName, Date.now() - 60*1000, limit);
+                } else {
+                    result = db.prepare("SELECT _id, indexed_at FROM posts WHERE rkey=? ORDER BY indexed_at DESC LIMIT ?").all(feedObj.shortName, limit);
+                }
+
                 if (result.length === 0) {
                     feed = sticky ? [{post: sticky}] : [];
                     return {cursor, feed};

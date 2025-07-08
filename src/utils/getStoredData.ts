@@ -42,7 +42,7 @@ export async function getStoredData() {
             everyList, everyListSync,
             viewers, viewersSync,
             pics, mustLabels, allowLabels, postLevels, keywordSetting,
-            languages, sort} = feed;
+            languages, sort, posts} = feed;
         // Set the at:// URI
         const uri = `at://${agent.session!.did}/app.bsky.feed.generator/${shortName}`;
         keywords = keywords = prepKeywords(keywords || []);
@@ -63,7 +63,7 @@ export async function getStoredData() {
             allowList, allowListSync,
             everyList, everyListSync,
             pics, mustLabels, allowLabels, postLevels, keywordSetting,
-            languages, sort, viewers, viewersSync
+            languages, sort, viewers, viewersSync, posts
         }
     });
 

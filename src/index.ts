@@ -42,7 +42,7 @@ import getDidForUser from "./routes/getDidForUser.ts";
     if (feeds.find(feed => ["ups", "sUps"].find(y => feed.sort === y))) {
         wantedCollections.push("app.bsky.feed.repost");
     }
-    const collectModeration = feeds.find(feed => feed.mustLabels.length > 0 || feed.allowLabels.length < SUPPORTED_CW_LABELS.length);
+    const collectModeration = feeds.find(feed => feed.allowLabels.length < SUPPORTED_CW_LABELS.length);
 
     if (wantedCollections.length > 0) {
         const jetstream = new Jetstream({wantedCollections}, db, feeds);
