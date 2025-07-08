@@ -2,6 +2,7 @@ import {WebSocket} from "partysocket";
 import Database from "better-sqlite3";
 import {SUPPORTED_CW_LABELS, TIMEZONE} from "./constants.ts";
 import {findKeyword, findKeywordIn} from "./textAndKeywords.ts";
+import { eld } from 'eld';
 
 const JETSTREAM_SERVERS = [
     "jetstream1.us-east.bsky.network",
@@ -67,6 +68,25 @@ export class Jetstream {
             return true;
         }
         return conditions.some(x => x.want && x.has == x.want);
+    }
+
+    private additionalLangCheck (txt, feed, uri, lang) {
+        if (feed.languages.length > 0) {
+            const detect = eld.detect(txt);
+            const scores = detect.getScores();
+            const newLang = feed.languages.filter(ln => {
+                if (!ln) {return false;}
+                if (detect.language === ln) {return true;}
+                const score = scores[ln];
+                if (!score) {return false;}
+                return score > 0.40;
+            });
+
+            if (!newLang.some(x => feed.languages.includes(x))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     async run() {
@@ -306,6 +326,7 @@ export class Jetstream {
                             for (const feed of this.feeds) {
                                 if (feed.mode === "live") {
                                     if (feed.blockList.includes(author)) { continue; }
+
                                     if (feed.allowList.length > 0 && !feed.allowList.includes(author)) { continue; }
 
                                     const wantPics = feed.pics.includes("pics");
@@ -323,6 +344,7 @@ export class Jetstream {
                                         if (labels.some(x => rejectedLabels.includes(x))) { continue; }
                                         if (Array.isArray(feed.mustLabels) && feed.mustLabels.length > 0 && !feed.mustLabels.some(x => labels.includes(x))) { continue; }
                                     }
+
 
                                     const wantTop = feed.postLevels.includes("top");
                                     const wantReply = feed.postLevels.includes("reply");
@@ -386,6 +408,8 @@ export class Jetstream {
                                             (feed.keywordSetting.includes("link") && links.length > 0 && findKeywordIn(links, feed.keywords.search));
 
                                         if (found) {
+                                            if (this.additionalLangCheck (txt, feed, uri, lang)) { continue; }
+
                                             commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
                                             continue;
                                         }
@@ -414,6 +438,8 @@ export class Jetstream {
                                             (feed.keywordSetting.includes("link") && links.length > 0 && findKeywordIn(links, feed.keywordsQuote.search))
 
                                         if (found) {
+                                            if (this.additionalLangCheck (txt, feed, uri, lang)) { continue; }
+
                                             commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
                                         }
                                     }

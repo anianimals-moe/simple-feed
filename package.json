@@ -15,6 +15,7 @@
     "@types/express": "^5.0.3",
     "better-sqlite3": "^12.0.0",
     "dotenv": "^16.5.0",
+    "eld": "^1.0.1",
     "express": "^5.1.0",
     "partysocket": "^1.1.4",
     "really-relaxed-json": "^0.3.2"
