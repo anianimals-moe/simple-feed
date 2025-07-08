@@ -134,8 +134,8 @@ export class Jetstream {
 
                             const thenTs = new Date(record.createdAt).getTime();
                             const diffTs = nowTs - thenTs;
-                            if(//diffTs > 43200000 // 12 hours past
-                               // ||
+                            if(diffTs > 43200000 // 12 hours past
+                                ||
                                 diffTs < -600000 // 10 min future
                             ) { return; }
                             timestamps.push(thenTs);

@@ -7,12 +7,6 @@ export async function getStoredData() {
     if (!process.env.DOMAIN) {
         throw "Missing DOMAIN entry in .env";
     }
-    if (!process.env.BLUESKY_USERNAME) {
-        throw "Missing BLUESKY_USERNAME entry in .env";
-    }
-    if (!process.env.BLUESKY_PASSWORD) {
-        throw "Missing BLUESKY_PASSWORD entry in .env";
-    }
 
     if (!process.env.SECRET_PATH) {
         throw "Missing SECRET PATH entry in .env";
@@ -25,49 +19,63 @@ export async function getStoredData() {
         throw "Missing feeds array in feeds.json";
     }
 
-    let feeds:any = JSON.parse(fs.readFileSync("feeds.json", {encoding:"utf8"}));
-    if (!Array.isArray(feeds) || feeds.length < 1) {
+    let feedData:any = JSON.parse(fs.readFileSync("feeds.json", {encoding:"utf8"}));
+    if (!Array.isArray(feedData) || feedData.length < 1) {
         throw "Missing feeds array in feeds.json";
     }
 
-    const identifier = process.env.BLUESKY_USERNAME;
-    const password = process.env.BLUESKY_PASSWORD;
-    const agent = new AtpAgent({ service: "https://bsky.social/" });
-    await agent.login({identifier, password});
-
-    feeds = feeds.map(feed => {
-        let {keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky, displayName, description,
-            blockList, blockListSync,
-            allowList, allowListSync,
-            everyList, everyListSync,
-            viewers, viewersSync,
-            pics, mustLabels, allowLabels, postLevels, keywordSetting,
-            languages, sort, posts} = feed;
-        // Set the at:// URI
-        const uri = `at://${agent.session!.did}/app.bsky.feed.generator/${shortName}`;
-        keywords = keywords = prepKeywords(keywords || []);
-        keywordsQuote = prepKeywords(keywordsQuote || []);
-        everyListBlockKeyword = prepKeywords(everyListBlockKeyword || []);
-        blockList = blockList || [];
-        allowList = allowList || [];
-        everyList = everyList || [];
-        mustLabels = mustLabels || [];
-        allowLabels = allowLabels || SUPPORTED_CW_LABELS;
-        languages = languages || [];
-        sort = sort || "new";
-        viewers = viewers || [];
-
-        return { uri,
-            keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky, displayName, description,
-            blockList, blockListSync,
-            allowList, allowListSync,
-            everyList, everyListSync,
-            pics, mustLabels, allowLabels, postLevels, keywordSetting,
-            languages, sort, viewers, viewersSync, posts
+    const out:any[] = [];
+    for (const group of feedData) {
+        let {user:identifier, password, feeds} = group;
+        if (!Array.isArray(feeds) || feeds.length < 1) {
+            throw "Missing feeds array in feeds.json";
         }
-    });
 
-   // console.log(JSON.stringify(feeds, null, 2))
+        if (!identifier || !password) {
+            throw "Missing user data in feeds.json";
+        }
 
-    return {feeds, agent};
+        const agent = new AtpAgent({ service: "https://bsky.social/" });
+        await agent.login({identifier, password});
+
+        if (!agent.session) {
+            throw `Invalid user data for ${identifier} ${password}`;
+        }
+
+        feeds = feeds.map(feed => {
+            let {keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky, displayName, description,
+                blockList, blockListSync,
+                allowList, allowListSync,
+                everyList, everyListSync,
+                viewers, viewersSync,
+                pics, mustLabels, allowLabels, postLevels, keywordSetting,
+                languages, sort, posts} = feed;
+            // Set the at:// URI
+            const uri = `at://${agent.session!.did}/app.bsky.feed.generator/${shortName}`;
+            keywords = keywords = prepKeywords(keywords || []);
+            keywordsQuote = prepKeywords(keywordsQuote || []);
+            everyListBlockKeyword = prepKeywords(everyListBlockKeyword || []);
+            blockList = blockList || [];
+            allowList = allowList || [];
+            everyList = everyList || [];
+            mustLabels = mustLabels || [];
+            allowLabels = allowLabels || SUPPORTED_CW_LABELS;
+            languages = languages || [];
+            sort = sort || "new";
+            viewers = viewers || [];
+
+            return { uri,
+                keywords, keywordsQuote, mode, everyListBlockKeyword, shortName, sticky, displayName, description,
+                blockList, blockListSync,
+                allowList, allowListSync,
+                everyList, everyListSync,
+                pics, mustLabels, allowLabels, postLevels, keywordSetting,
+                languages, sort, viewers, viewersSync, posts
+            }
+        });
+
+        out.push({feeds, agent});
+    }
+
+    return out;
 }

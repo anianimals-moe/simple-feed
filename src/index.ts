@@ -20,7 +20,10 @@ import getDidForUser from "./routes/getDidForUser.ts";
     console.log("start");
     dotenv.config();
     initConstants();
-    const {feeds} = await getStoredData();
+    const feeds = (await getStoredData()).reduce((acc, x) => {
+        acc.push(...x.feeds);
+        return acc;
+    }, []);
     const db = initDb();
 
 // Update lists every 7 minutes

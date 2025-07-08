@@ -2,8 +2,9 @@ Work in progress
 
 Getting Started
 - Have npm, yarn, and tsx installed globally (not covered by this readme, sorry), yes I know tsx has issues
-- Prepare feeds.json, which is a combination of output from blueskyfeeds.com backup json with all feeds combined in an array []
-  - e.g. if only 1 feed, put a [ at the front and ] and the end and rename the json file to feed.json
+- [Prepare feeds.json](docs/feeds.md), which is a combination of username, app password, and output from blueskyfeeds.com backup json with all feeds combined in an array []
+  - e.g. if only 1 feed, put [{user:example@domain.com, password:0000-1111-2222-3333, feeds:[]}] and put the output inside the feeds [] and rename the json file to feed.json
+  - Every feed must have a unique shortName, even across users. This is a restriction to save database storage space
 - [Prepare the environment file](docs/env.md)
 - On console, run <yarn install> to download /node_modules
 - On console, run <yarn register> to register the feed to Bluesky's app layer
@@ -21,3 +22,4 @@ Some other readmes
 - [High Level Technical Architecture](docs/architecture.md)
 - [Setting up the Environment file](docs/env.md)
 - [HTTP routes](docs/http.md)
+- [feeds.json Format](docs/feeds.md)
