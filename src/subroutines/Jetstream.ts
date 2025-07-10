@@ -1,7 +1,7 @@
 import {WebSocket} from "partysocket";
 import Database from "better-sqlite3";
-import {SUPPORTED_CW_LABELS, TIMEZONE} from "./constants.ts";
-import {findKeyword, findKeywordIn} from "./textAndKeywords.ts";
+import {SUPPORTED_CW_LABELS, TIMEZONE} from "../utils/constants.ts";
+import {findKeyword, findKeywordIn} from "../utils/textAndKeywords.ts";
 import { eld } from 'eld';
 
 const JETSTREAM_SERVERS = [
@@ -83,6 +83,10 @@ export class Jetstream {
             });
 
             if (!newLang.some(x => feed.languages.includes(x))) {
+                // Logging for experimental
+             //   const lessScores = Object.entries(scores).filter(([key, value]) => key === "en" || value > 0.1);
+              //  console.log(txt, lessScores, uri, lang, feed.shortName);
+
                 return true;
             }
         }
@@ -124,6 +128,8 @@ export class Jetstream {
                 WHERE EXISTS (SELECT 1 FROM posts m WHERE m._id = c.target AND m.rkey IN (${this.feedsWithRepost.map(x => `'${x}'`).join(",")}))
             `);
 
+            const insertAncestor = db.prepare(`INSERT OR IGNORE INTO post_ancestor (rkey, _id, ancestor, checked) VALUES (@rkey, @_id, @ancestor, 0)`);
+
             try {
                 let commands:any[] = [];
                 const event = JSON.parse(data.data);
@@ -145,10 +151,14 @@ export class Jetstream {
                 const date = new Date();
                 const nowTs = date.getTime();
                 const author = event.did;
+                if ("did:plc:mcb6n67plnrlx4lg35natk2b" === author) { // nowbreezing.ntw.app
+                    return;
+                }
 
                 if (event.commit.collection === "app.bsky.feed.post") {
                     switch (event.commit.operation) {
                         case "create": {
+
                             let {rkey, record} = event.commit;
                             if (rkey.length !== 13 || !/^[234567abcdefghijklmnopqrstuvwxyz]*$/.test(rkey)) { return; }
 
@@ -317,11 +327,17 @@ export class Jetstream {
                                     return acc;
                                 }, labels);
 
+                                const ids = [uri, parentUri, quoteUri, rootUri].filter(x => x).map(x => `'${x}'`).join(",");
+
+
                                 // add labels from db
-                                db.prepare('SELECT v from moderation WHERE _id=?').all(uri).forEach(x => labels.push(x.v));
+                                db.prepare(`SELECT v from moderation WHERE _id IN (${ids})`).all().forEach(x => {
+                                    if (!labels.find(l => l === x.v)) {
+                                        labels.push(x.v)
+                                    }
+                                });
                             }
                             const lang = (record.langs as string[] || [""]).map(x => x.split("-")[0]);
-
 
                             for (const feed of this.feeds) {
                                 if (feed.mode === "live") {
@@ -339,8 +355,9 @@ export class Jetstream {
                                         {want: wantText, has: !(hasPics || hasVideo)}])
                                     if (!checkMedia) { continue; }
 
+                                    let rejectedLabels:any = null;
                                     if (hasPics || hasVideo) {
-                                        let rejectedLabels = SUPPORTED_CW_LABELS.filter(x => !(feed.allowLabels || []).includes(x));
+                                        rejectedLabels = SUPPORTED_CW_LABELS.filter(x => !(feed.allowLabels || []).includes(x));
                                         if (labels.some(x => rejectedLabels.includes(x))) { continue; }
                                         if (Array.isArray(feed.mustLabels) && feed.mustLabels.length > 0 && !feed.mustLabels.some(x => labels.includes(x))) { continue; }
                                     }
@@ -378,6 +395,11 @@ export class Jetstream {
 
                                         // Pass
                                         commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
+                                        if (rejectedLabels && rejectedLabels.length > 0) {
+                                            [parentUri, rootUri, quoteUri].filter(x => x).forEach(ancestor => {
+                                                commands.push({t:"insertAncestor", rkey:feed.shortName, _id:uri, ancestor});
+                                            });
+                                        }
                                         continue;
                                     }
 
@@ -408,9 +430,14 @@ export class Jetstream {
                                             (feed.keywordSetting.includes("link") && links.length > 0 && findKeywordIn(links, feed.keywords.search));
 
                                         if (found) {
-                                            if (this.additionalLangCheck (txt, feed, uri, lang)) { continue; }
+                                            if (this.additionalLangCheck (txt || altTexts[0] || "", feed, uri, lang)) { continue; }
 
                                             commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
+                                            if (rejectedLabels && rejectedLabels.length > 0) {
+                                                [parentUri, rootUri, quoteUri].filter(x => x).forEach(ancestor => {
+                                                    commands.push({t:"insertAncestor", rkey:feed.shortName, _id:uri, ancestor});
+                                                });
+                                            }
                                             continue;
                                         }
                                     }
@@ -438,9 +465,14 @@ export class Jetstream {
                                             (feed.keywordSetting.includes("link") && links.length > 0 && findKeywordIn(links, feed.keywordsQuote.search))
 
                                         if (found) {
-                                            if (this.additionalLangCheck (txt, feed, uri, lang)) { continue; }
+                                            if (this.additionalLangCheck (txt || altTexts[0] || "", feed, uri, lang)) { continue; }
 
                                             commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
+                                            if (rejectedLabels && rejectedLabels.length > 0) {
+                                                [parentUri, rootUri, quoteUri].filter(x => x).forEach(ancestor => {
+                                                    commands.push({t:"insertAncestor", rkey:feed.shortName, _id:uri, ancestor});
+                                                });
+                                            }
                                         }
                                     }
                                 }
@@ -584,6 +616,7 @@ export class Jetstream {
                         switch (t) {
                             case "insertLike": { insertLike.run(rest); break; }
                             case "insertRepost": { insertRepost.run(rest); break; }
+                            case "insertAncestor": { insertAncestor.run(rest); break; }
                             case "insertPost": { insertPost.run(rest); break; }
                             case "deleteUp": { deleteUp.run(rest); break; }
                             case "deletePost": { deletePost.run(rest); break; }

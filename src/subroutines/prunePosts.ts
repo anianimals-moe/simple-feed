@@ -1,4 +1,4 @@
-import {KEEP_POSTS_FOR} from "./constants.ts";
+import {KEEP_POSTS_FOR} from "../utils/constants.ts";
 
 export function prunePosts(db) {
     const now = Date.now();

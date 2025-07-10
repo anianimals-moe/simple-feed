@@ -1,5 +1,5 @@
 export const SUPPORTED_CW_LABELS = ["nudity", "sexual", "porn", "corpse"];
-export let GRAVITY = 2;
+export let GRAVITY = 1.8;
 export let TIMEZONE:any = {};
 
 export let KEEP_POSTS_FOR = -1;

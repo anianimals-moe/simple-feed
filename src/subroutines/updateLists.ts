@@ -1,4 +1,4 @@
-import {publicAgent} from "./publicAgent.ts";
+import {publicAgent} from "../utils/publicAgent.ts";
 import fs from "fs";
 
 const FEED_LIST_PATHS = [

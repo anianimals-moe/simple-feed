@@ -3,18 +3,19 @@ import describeFeedGenerator from "./routes/describeFeedGenerator.ts";
 import getFeedSkeleton from "./routes/getFeedSkeleton.ts";
 import deletePostFromFeed from "./routes/deletePostFromFeed.ts";
 import {getStoredData} from "./utils/getStoredData.ts";
-import {Jetstream} from "./utils/Jetstream.ts";
+import {Jetstream} from "./subroutines/Jetstream.ts";
 import {initDb} from "./utils/initDb.ts";
-import {updateLists} from "./utils/updateLists.ts";
-import {prunePosts} from "./utils/prunePosts.ts";
-import {pruneModeration} from "./utils/pruneModeration.ts";
+import {updateLists} from "./subroutines/updateLists.ts";
+import {prunePosts} from "./subroutines/prunePosts.ts";
+import {pruneModeration} from "./subroutines/pruneModeration.ts";
 import {initConstants, KEEP_POSTS_FOR, SUPPORTED_CW_LABELS, PORT} from "./utils/constants.ts";
-import {LabelSubscription} from "./utils/LabelSubscription.ts";
-import {pruneOrphans} from "./utils/pruneOrphans.ts";
+import {LabelSubscription} from "./subroutines/LabelSubscription.ts";
+import {pruneOrphans} from "./subroutines/pruneOrphans.ts";
 import wellKnown from "./routes/wellKnown.ts";
 import updateFeeds from "./routes/updateFeeds.ts";
 import express from 'express'
 import getDidForUser from "./routes/getDidForUser.ts";
+import {checkAncestorModeration} from "./subroutines/checkAncestorModeration.ts";
 
 (async () => {
     console.log("start");
@@ -76,6 +77,16 @@ import getDidForUser from "./routes/getDidForUser.ts";
             }, 31*60*1000);
         })();
     }
+
+    (function loopCheckAncestorModeration() {
+        checkAncestorModeration(db, feeds).then(() => {
+            setTimeout( () => {
+                loopCheckAncestorModeration();
+            }, 27*60*1000);
+        });
+    })();
+
+
 
     (function loopPruneOrphans() {
         pruneOrphans(db);

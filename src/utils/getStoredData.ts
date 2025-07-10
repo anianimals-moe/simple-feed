@@ -74,6 +74,8 @@ export async function getStoredData() {
             }
         });
 
+        agent.logout();
+
         out.push({feeds, agent});
     }
 
