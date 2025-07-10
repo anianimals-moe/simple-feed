@@ -151,7 +151,9 @@ export class Jetstream {
                 const date = new Date();
                 const nowTs = date.getTime();
                 const author = event.did;
-                if ("did:plc:mcb6n67plnrlx4lg35natk2b" === author) { // nowbreezing.ntw.app
+                if (["did:plc:mcb6n67plnrlx4lg35natk2b", // nowbreezing.ntw.app
+                    "did:plc:k43ha6nlknmdw4owymqnvcat"] // hourlybreezing.ntw.app
+                    .includes(author)) {
                     return;
                 }
 
@@ -316,6 +318,9 @@ export class Jetstream {
                             }
 
                             let labels:string[] = [];
+                            const ids = [uri, parentUri, quoteUri, rootUri].filter(x => x);
+                            const authors = ids.map(x => x.split("/")[2]);
+
                             // @ts-ignore
                             if (record.labels?.$type === "com.atproto.label.defs#selfLabels" && Array.isArray(record.labels.values)) {
                                 // @ts-ignore
@@ -327,11 +332,8 @@ export class Jetstream {
                                     return acc;
                                 }, labels);
 
-                                const ids = [uri, parentUri, quoteUri, rootUri].filter(x => x).map(x => `'${x}'`).join(",");
-
-
                                 // add labels from db
-                                db.prepare(`SELECT v from moderation WHERE _id IN (${ids})`).all().forEach(x => {
+                                db.prepare(`SELECT v from moderation WHERE _id IN (${ids.map(x => `'${x}'`).join(",")})`).all().forEach(x => {
                                     if (!labels.find(l => l === x.v)) {
                                         labels.push(x.v)
                                     }
@@ -341,7 +343,7 @@ export class Jetstream {
 
                             for (const feed of this.feeds) {
                                 if (feed.mode === "live") {
-                                    if (feed.blockList.includes(author)) { continue; }
+                                    if (authors.some(user => feed.blockList.includes(user))) { continue; }
 
                                     if (feed.allowList.length > 0 && !feed.allowList.includes(author)) { continue; }
 
