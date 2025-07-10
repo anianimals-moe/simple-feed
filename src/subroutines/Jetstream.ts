@@ -84,8 +84,21 @@ export class Jetstream {
 
             if (!newLang.some(x => feed.languages.includes(x))) {
                 // Logging for experimental
-             //   const lessScores = Object.entries(scores).filter(([key, value]) => key === "en" || value > 0.1);
-              //  console.log(txt, lessScores, uri, lang, feed.shortName);
+                const lessScores = Object.entries(scores).filter(([key, value]) => key === "en" || value > 0.1); // already sorted
+                if (lessScores.length > 1) {
+                    const highScore = lessScores[0][1];
+                    const secondScore = lessScores[1][1];
+                    const search = lessScores.find(([key, value]) => {
+                        // has language, is equal to second place and difference with high < threshold
+                        return feed.languages.includes(key) && value === secondScore && highScore-value < 0.06;
+                    });
+                    if (search) {
+                      //  console.log("[keep]", txt, lessScores, uri, lang, feed.shortName);
+                        return false;
+                    }
+                }
+
+             //   console.log("[drop]", txt, lessScores, uri, lang, feed.shortName);
 
                 return true;
             }
@@ -432,7 +445,7 @@ export class Jetstream {
                                             (feed.keywordSetting.includes("link") && links.length > 0 && findKeywordIn(links, feed.keywords.search));
 
                                         if (found) {
-                                            if (this.additionalLangCheck (txt || altTexts[0] || "", feed, uri, lang)) { continue; }
+                                            if (this.additionalLangCheck (txt.trim() || altTexts[0] || "", feed, uri, lang)) { continue; }
 
                                             commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
                                             if (rejectedLabels && rejectedLabels.length > 0) {
@@ -467,7 +480,7 @@ export class Jetstream {
                                             (feed.keywordSetting.includes("link") && links.length > 0 && findKeywordIn(links, feed.keywordsQuote.search))
 
                                         if (found) {
-                                            if (this.additionalLangCheck (txt || altTexts[0] || "", feed, uri, lang)) { continue; }
+                                            if (this.additionalLangCheck (txt.trim() || altTexts[0] || "", feed, uri, lang)) { continue; }
 
                                             commands.push({t:"insertPost", rkey:feed.shortName, _id:uri, author, indexed_at:nowTs, like_id:null, expires:1});
                                             if (rejectedLabels && rejectedLabels.length > 0) {
