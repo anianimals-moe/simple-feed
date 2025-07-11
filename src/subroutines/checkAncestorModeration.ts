@@ -27,13 +27,13 @@ const tryGetPosts = async (uris:string[], attempt= 1) => {
     }
 }
 export async function checkAncestorModeration(db, feeds:any[]) {
-    const toModerate = db.prepare('SELECT rkey, _id, ancestor FROM post_ancestor WHERE checked = 0').all();
+    const toModerate = db.prepare('SELECT rkey, _id, ancestor, checked FROM post_ancestor WHERE checked < 1').all();
     console.log("checkAncestorModeration", toModerate.length);
-    const mapping = new Map<string, {_id:string, rkey:string}[]>();
+    const mapping = new Map<string, {_id:string, rkey:string, checked:number}[]>();
     const commands:any[] = [];
-    for (const {rkey, _id, ancestor} of toModerate) {
+    for (const {rkey, _id, ancestor, checked} of toModerate) {
         const entries = mapping.get(ancestor) || [];
-        entries.push({rkey, _id});
+        entries.push({rkey, _id, checked});
         commands.push({t:"updateAncestor", rkey, _id, ancestor});
         mapping.set(ancestor, entries);
     }
@@ -43,14 +43,34 @@ export async function checkAncestorModeration(db, feeds:any[]) {
 
     const deletePost = db.prepare("DELETE FROM posts WHERE rkey=@rkey AND _id=@_id");
     const updateAncestor = db.prepare("UPDATE post_ancestor SET checked = 1 WHERE rkey=@rkey AND _id=@_id AND ancestor=@ancestor");
+    const insertAncestor = db.prepare(`INSERT OR IGNORE INTO post_ancestor (rkey, _id, ancestor, checked) VALUES (@rkey, @_id, @ancestor, -1)`);
 
     for (const uris of list) {
         const posts = await tryGetPosts(uris); // Any uri that isn't retrieved is already deleted
-        for (const {uri, labels} of posts) {
+        for (const {uri, labels, record:{embed}} of posts) {
+            const feedsWithIds = mapping.get(uri);
+
+            if (embed) {
+                // Add quote as ancestor to check for moderation too!
+                let quoteUri = "";
+                switch (embed["$type"]) {
+                    case "app.bsky.embed.recordWithMedia": { quoteUri = embed.record?.record?.uri; break; }
+                    case "app.bsky.embed.record": { quoteUri = embed.record?.uri; break; }
+                }
+                if (quoteUri) {
+                    feedsWithIds.forEach(({_id, rkey, checked}) => {
+                        if (checked === 0) {
+                            commands.push({t: "insertAncestor", rkey, _id, ancestor:quoteUri});
+                        } // checked = -1 is root already, don't go deeper
+                    });
+                }
+            }
+
+
             for (const {src, val, neg} of labels) {
                 if (src !== "did:plc:ar7c4by46qjdydhdevvrndac" || neg) { continue; }
 
-                for (const {_id, rkey} of mapping.get(uri)) {
+                for (const {_id, rkey} of feedsWithIds) {
                     const feed = feeds.find(x => x.shortName === rkey);
                     const labelsToReject = SUPPORTED_CW_LABELS.filter(x => !(feed.allowLabels || []).includes(x));
                     if (labelsToReject.some(x => x === val)) {
@@ -65,11 +85,10 @@ export async function checkAncestorModeration(db, feeds:any[]) {
         for (const command of commands) {
             const {t, ...rest} = command;
             switch (t) {
-                case "deletePost": { deletePost.run(rest); break; }
                 case "updateAncestor": { updateAncestor.run(rest); break; }
+                case "deletePost": { deletePost.run(rest); break; }
+                case "insertAncestor": { insertAncestor.run(rest); break; }
             }
         }
     })(commands);
-
-
 }

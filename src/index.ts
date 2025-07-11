@@ -82,7 +82,7 @@ import {checkAncestorModeration} from "./subroutines/checkAncestorModeration.ts"
         checkAncestorModeration(db, feeds).then(() => {
             setTimeout( () => {
                 loopCheckAncestorModeration();
-            }, 27*60*1000);
+            }, 60*1000);
         });
     })();
 
