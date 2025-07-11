@@ -6,7 +6,13 @@ export let KEEP_POSTS_FOR = -1;
 
 export let PORT = 3000;
 
+export let LANGUAGE_THRESHOLD = 0.07;
+
 export function initConstants () {
+    const langThreshold = parseFloat(process.env.LANGUAGE_THRESHOLD);
+    if (!isNaN(langThreshold) && langThreshold > 0) {
+        LANGUAGE_THRESHOLD = langThreshold;
+    }
     const envGravity = parseInt(process.env.GRAVITY);
     if (!isNaN(envGravity) && envGravity > 1) {
         GRAVITY = envGravity;

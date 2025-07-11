@@ -1,6 +1,6 @@
 import {WebSocket} from "partysocket";
 import Database from "better-sqlite3";
-import {SUPPORTED_CW_LABELS, TIMEZONE} from "../utils/constants.ts";
+import {LANGUAGE_THRESHOLD, SUPPORTED_CW_LABELS, TIMEZONE} from "../utils/constants.ts";
 import {findKeyword, findKeywordIn} from "../utils/textAndKeywords.ts";
 import { eld } from 'eld';
 
@@ -90,7 +90,7 @@ export class Jetstream {
                     const secondScore = lessScores[1][1];
                     const search = lessScores.find(([key, value]) => {
                         // has language, is equal to second place and difference with high < threshold
-                        return feed.languages.includes(key) && value === secondScore && highScore-value < 0.06;
+                        return feed.languages.includes(key) && value === secondScore && highScore-value < LANGUAGE_THRESHOLD;
                     });
                     if (search) {
                       //  console.log("[keep]", txt, lessScores, uri, lang, feed.shortName);
