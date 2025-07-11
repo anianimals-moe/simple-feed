@@ -1,4 +1,4 @@
-export const SUPPORTED_CW_LABELS = ["nudity", "sexual", "porn", "corpse"];
+export const SUPPORTED_CW_LABELS = ["nudity", "sexual", "porn", "graphic-media"];
 export let GRAVITY = 1.8;
 export let TIMEZONE:any = {};
 
