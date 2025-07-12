@@ -97,7 +97,8 @@ import {checkAncestorModeration} from "./subroutines/checkAncestorModeration.ts"
 
 
     const app = express();
-    app.use(express.json());
+    app.use(express.json({ limit: '10MB' }));
+    
     app.get('/xrpc/app.bsky.feed.getFeedSkeleton', (req, res) => {
         getFeedSkeleton(req, res, db, feeds);
     });
