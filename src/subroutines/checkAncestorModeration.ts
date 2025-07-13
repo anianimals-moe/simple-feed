@@ -30,12 +30,17 @@ export async function checkAncestorModeration(db, feeds:any[]) {
     let loopAgain = false;
     const toModerate = db.prepare('SELECT rkey, _id, ancestor, checked FROM post_ancestor WHERE checked < 1').all();
     console.log("checkAncestorModeration", toModerate.length);
-    const mapping = new Map<string, {_id:string, rkey:string, checked:number}[]>();
+    const mapping = new Map<string, {_id:string, rkey:string, checked:number, feed:any}[]>();
     const commands:any[] = [];
     for (const {rkey, _id, ancestor, checked} of toModerate) {
-        const entries = mapping.get(ancestor) || [];
-        entries.push({rkey, _id, checked});
         commands.push({t:"updateAncestor", rkey, _id, ancestor});
+        const entries = mapping.get(ancestor) || [];
+        const feed = feeds.find(x => x.shortName === rkey);
+        if (!feed) {
+            console.log("Missing feed", rkey);
+            continue;
+        }
+        entries.push({rkey, _id, checked, feed});
         mapping.set(ancestor, entries);
     }
 
@@ -59,10 +64,15 @@ export async function checkAncestorModeration(db, feeds:any[]) {
                     case "app.bsky.embed.record": { quoteUri = embed.record?.uri; break; }
                 }
                 if (quoteUri) {
-                    feedsWithIds.forEach(({_id, rkey, checked}) => {
+                    const quoteAuthor = quoteUri.split("/")[2];
+                    feedsWithIds.forEach(({_id, rkey, checked, feed}) => {
                         if (checked === 0) {
-                            loopAgain = true;
-                            commands.push({t: "insertAncestor", rkey, _id, ancestor:quoteUri});
+                            if (feed.blockList.includes(quoteAuthor)) {
+                                commands.push({t:"deletePost", rkey, _id});
+                            } else {
+                                loopAgain = true;
+                                commands.push({t: "insertAncestor", rkey, _id, ancestor:quoteUri});
+                            }
                         } // checked = -1 is root already, don't go deeper
                     });
                 }
@@ -72,8 +82,7 @@ export async function checkAncestorModeration(db, feeds:any[]) {
             for (const {src, val, neg} of labels) {
                 if (src !== "did:plc:ar7c4by46qjdydhdevvrndac" || neg) { continue; }
 
-                for (const {_id, rkey} of feedsWithIds) {
-                    const feed = feeds.find(x => x.shortName === rkey);
+                for (const {_id, rkey, feed} of feedsWithIds) {
                     const labelsToReject = SUPPORTED_CW_LABELS.filter(x => !(feed.allowLabels || []).includes(x));
                     if (labelsToReject.some(x => x === val)) {
                         commands.push({t:"deletePost", rkey, _id});
