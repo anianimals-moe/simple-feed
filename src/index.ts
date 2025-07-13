@@ -82,7 +82,7 @@ import {checkAncestorModeration} from "./subroutines/checkAncestorModeration.ts"
         checkAncestorModeration(db, feeds).then(() => {
             setTimeout( () => {
                 loopCheckAncestorModeration();
-            }, 60*1000);
+            }, 10*1000);
         });
     })();
 
@@ -98,7 +98,7 @@ import {checkAncestorModeration} from "./subroutines/checkAncestorModeration.ts"
 
     const app = express();
     app.use(express.json({ limit: '10MB' }));
-    
+
     app.get('/xrpc/app.bsky.feed.getFeedSkeleton', (req, res) => {
         getFeedSkeleton(req, res, db, feeds);
     });

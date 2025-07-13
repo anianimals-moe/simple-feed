@@ -27,6 +27,7 @@ const tryGetPosts = async (uris:string[], attempt= 1) => {
     }
 }
 export async function checkAncestorModeration(db, feeds:any[]) {
+    let loopAgain = false;
     const toModerate = db.prepare('SELECT rkey, _id, ancestor, checked FROM post_ancestor WHERE checked < 1').all();
     console.log("checkAncestorModeration", toModerate.length);
     const mapping = new Map<string, {_id:string, rkey:string, checked:number}[]>();
@@ -60,6 +61,7 @@ export async function checkAncestorModeration(db, feeds:any[]) {
                 if (quoteUri) {
                     feedsWithIds.forEach(({_id, rkey, checked}) => {
                         if (checked === 0) {
+                            loopAgain = true;
                             commands.push({t: "insertAncestor", rkey, _id, ancestor:quoteUri});
                         } // checked = -1 is root already, don't go deeper
                     });
@@ -91,4 +93,8 @@ export async function checkAncestorModeration(db, feeds:any[]) {
             }
         }
     })(commands);
+
+    if (loopAgain) {
+        await checkAncestorModeration(db, feeds);
+    }
 }
