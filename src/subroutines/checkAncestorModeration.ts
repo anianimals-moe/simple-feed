@@ -29,7 +29,6 @@ const tryGetPosts = async (uris:string[], attempt= 1) => {
 export async function checkAncestorModeration(db, feeds:any[]) {
     let loopAgain = false;
     const toModerate = db.prepare('SELECT rkey, _id, ancestor, checked FROM post_ancestor WHERE checked < 1').all();
-    console.log("checkAncestorModeration", toModerate.length);
     const mapping = new Map<string, {_id:string, rkey:string, checked:number, feed:any}[]>();
     const commands:any[] = [];
     for (const {rkey, _id, ancestor, checked} of toModerate) {
