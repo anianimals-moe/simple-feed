@@ -97,7 +97,13 @@ export async function checkAncestorModeration(db, feeds:any[]) {
             switch (t) {
                 case "updateAncestor": { updateAncestor.run(rest); break; }
                 case "deletePost": { deletePost.run(rest); break; }
-                case "insertAncestor": { insertAncestor.run(rest); break; }
+                case "insertAncestor": {
+                    try {
+                        insertAncestor.run(rest);
+                    } catch (e) {
+                        console.error(JSON.stringify(command), e);
+                    }
+                } break; }
             }
         }
     })(commands);
