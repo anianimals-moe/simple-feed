@@ -103,7 +103,8 @@ export async function checkAncestorModeration(db, feeds:any[]) {
                     } catch (e) {
                         console.error(JSON.stringify(command), e);
                     }
-                } break; }
+                    break;
+                }
             }
         }
     })(commands);
